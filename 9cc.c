@@ -36,6 +36,23 @@ void error(char *fmt, ...) {
 	exit(1);
 }
 
+// 入力プログラム
+char *user_input;
+
+// エラー箇所を報告する
+void error_at(char *loc, char *fmt, ...) {
+	va_list ap;
+	va_start(ap, fmt);
+
+	int pos = loc - user_input;
+	fprintf(stderr, "%s\n", user_input);
+	fprintf(stderr, "%*s", pos, " "); // pos個の空白を出力
+	fprintf(stderr, "^ ");
+	vfprintf(stderr, fmt, ap);
+	fprintf(stderr, "\n");
+	exit(1);
+}
+
 // 次のトークンが期待している記号の時には、トークンを1つ読み進めて
 // 真を返す。それ以外の場合には偽を返す。
 bool consume(char op) {
@@ -57,7 +74,7 @@ void expect(char op) {
 // それ以外の場合にはエラーを報告する。
 int expect_number() {
 	if (token->kind != TK_NUM)
-		error("数ではありません");
+		error_at(token->str, "数ではありません");
 	int val = token->val;
 	token = token->next;
 	return  val;
@@ -113,6 +130,9 @@ int main(int argc, char **argv){
 		error("引数の個数が正しくありません");
 		return 1;
 	}
+
+	// 入力文字列の保存
+	user_input = argv[1];
 
 	// トークナイズする
 	token = tokenize(argv[1]);
